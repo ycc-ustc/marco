@@ -1,26 +1,50 @@
-#ifndef _SYLAR_LOG_H
-#define _SYLAR_LOG_H
+#ifndef __MACRO_LOG_H__
+#define __MACRO_LOG_H__
 
-#include <bits/stdint-intn.h>
-#include <bits/stdint-uintn.h>
-#include <stdint.h>
+#include <cstdint>
 #include <fstream>
-#include <iostream>
 #include <list>
 #include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
 
-namespace sylar {
+#define MACRO_LOG_LEVEL(logger, level)                                     \
+    if (logger->getLevel() <= level)                                       \
+    macro::LogEventWrap(                                                   \
+        macro::LogEvent::ptr(new macro::LogEvent(                          \
+            logger, level, __FILE__, __LINE__, 0, macro::GetThreadId(),    \
+            macro::GetFiberId(), time(nullptr))))                          \
+        .getSS()
 
+#define MACRO_LOG_DEBUG(logger)                                            \
+    MACRO_LOG_LEVEL(logger, macro::LogLevel::DEBUG)
+#define MACRO_LOG_INFO(logger)                                             \
+    MACRO_LOG_LEVEL(logger, macro::LogLevel::INFO)
+#define MACRO_LOG_WARN(logger)                                             \
+    MACRO_LOG_LEVEL(logger, macro::LogLevel::WARN)
+#define MACRO_LOG_ERROR(logger)                                            \
+    MACRO_LOG_LEVEL(logger, macro::LogLevel::ERROR)
+#define MACRO_LOG_FATAL(logger)                                            \
+    MACRO_LOG_LEVEL(logger, macro::LogLevel::FATAL)
+
+namespace macro {
 class Logger;
+
+// 日志级别
+class LogLevel {
+public:
+    enum Level { DEBUG = 1, INFO = 2, WARN = 3, ERROR = 4, FATAL = 5 };
+
+    static const char* ToString(LogLevel::Level level);
+};
 
 // 日志事件
 class LogEvent {
 public:
     typedef std::shared_ptr<LogEvent> ptr;
-    LogEvent(const char* file, int32_t line, uint32_t elapse,
+    LogEvent(std::shared_ptr<Logger> logger, LogLevel::Level level,
+             const char* file, int32_t line, uint32_t elapse,
              uint32_t thread_id, uint32_t fiber_id, uint64_t time);
 
     const char* getFile() const {
@@ -47,6 +71,17 @@ public:
     const std::string& getThreadName() const {
         return m_threadName;
     }
+    // 返回日志内容字符串流
+    std::stringstream& getSS() {
+        return m_ss;
+    }
+    std::shared_ptr<Logger> getLogger() {
+        return m_logger;
+    }
+
+    LogLevel::Level getLevel() {
+        return m_level;
+    }
 
 private:
     const char* m_file = nullptr;  // 文件名
@@ -56,15 +91,19 @@ private:
     uint32_t    m_fiberId = 0;   // 协程id
     uint64_t    m_time;          // 时间戳
     std::string m_threadName;    // 线程名称
-    std::stringstream m_ss;      // 日志内容流
+    std::stringstream       m_ss;  // 日志内容流
+    std::shared_ptr<Logger> m_logger;
+    LogLevel::Level         m_level;
 };
 
-// 日志级别
-class LogLevel {
+class LogEventWrap {
 public:
-    enum Level { DEBUG = 1, INFO = 2, WARN = 3, ERROR = 4, FATAL = 5 };
+    LogEventWrap(LogEvent::ptr event);
+    ~LogEventWrap();
+    std::stringstream& getSS();
 
-    static const char* ToString(LogLevel::Level level);
+private:
+    LogEvent::ptr m_event;
 };
 
 // 日志格式器
@@ -109,7 +148,7 @@ public:
     }
 
 protected:
-    LogLevel::Level   m_level;
+    LogLevel::Level   m_level = LogLevel::DEBUG;
     LogFormatter::ptr m_formatter;
 };
 
@@ -170,5 +209,5 @@ private:
     LogFormatter::ptr           m_formatter;
 };
 
-}  // namespace sylar
+}  // namespace macro
 #endif

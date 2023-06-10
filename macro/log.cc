@@ -1,8 +1,13 @@
 #include "log.h"
+#include <ctime>
 #include <functional>
+#include <iostream>
 #include <map>
+#include <memory>
+#include <sstream>
+#include <string>
 
-namespace sylar {
+namespace macro {
 
 const char* LogLevel::ToString(LogLevel::Level level) {
     switch (level) {
@@ -22,18 +27,30 @@ const char* LogLevel::ToString(LogLevel::Level level) {
     }
     return "UNKNOWN";
 }
+
+LogEventWrap::LogEventWrap(LogEvent::ptr event) : m_event(event) {}
+LogEventWrap::~LogEventWrap() {
+    m_event->getLogger()->log(m_event->getLevel(), m_event);
+}
+std::stringstream& LogEventWrap::getSS() {
+    return m_event->getSS();
+}
 Logger::Logger(const std::string& name)
     : m_name(name), m_level(LogLevel::DEBUG) {
-    m_formatter.reset(new LogFormatter("%d [%p] %f %l %m %n"));
+    m_formatter.reset(new LogFormatter(
+        "%d{%Y-%m-%d %H:%M:%S}%T%t%T%N%T%F%T[%p]%T[%c]%T%f:%l%T%m%n"));
 }
 
-LogEvent::LogEvent(const char* file, int32_t line, uint32_t elapse,
+LogEvent::LogEvent(std::shared_ptr<Logger> logger, LogLevel::Level level,
+                   const char* file, int32_t line, uint32_t elapse,
                    uint32_t thread_id, uint32_t fiber_id, uint64_t time)
     : m_file(file),
       m_line(line),
       m_threadId(thread_id),
       m_fiberId(fiber_id),
-      m_time(time) {}
+      m_time(time),
+      m_logger(std::move(logger)),
+      m_level(level) {}
 
 void Logger::addAppender(LogAppender::ptr appender) {
     if (!appender->getFormatter()) {
@@ -94,7 +111,8 @@ void StdoutLogAppender::log(std::shared_ptr<Logger> logger,
 
 void FileLogAppender::log(std::shared_ptr<Logger> logger,
                           LogLevel::Level level, LogEvent::ptr event) {
-    if (level >= m_level) {
+    if (level >=
+        m_level) {  // level等级大于m_level才会输出，默认m_level == DEBUG
         m_filestream << m_formatter->format(logger, level, event);
     }
 }
@@ -180,10 +198,19 @@ public:
 class DateTimeFormatItem : public LogFormatter::FormatItem {
 public:
     DateTimeFormatItem(const std::string format = "%Y:%m:%d %H:%M:%S")
-        : m_format(format) {}
+        : m_format(format) {
+        if (m_format.empty()) {
+            m_format = "%Y-%m-%d %H:%M:%S";
+        }
+    }
     void format(std::ostream& os, Logger::ptr logger, LogLevel::Level level,
                 LogEvent::ptr event) override {
-        os << event->getFiberId();
+        struct tm tm {};
+        time_t    time = event->getTime();  // 得到的是timestamp
+        localtime_r(&time, &tm);
+        char buf[64];
+        strftime(buf, sizeof(buf), m_format.c_str(), &tm);
+        os << buf;
     }
 
 private:
@@ -356,10 +383,10 @@ void LogFormatter::init() {
             }
         }
 
-        std::cout << "(" << std::get<0>(i) << ") - (" << std::get<1>(i)
-                  << ") - (" << std::get<2>(i) << ")" << std::endl;
+        // std::cout << "(" << std::get<0>(i) << ") - (" << std::get<1>(i)
+        //           << ") - (" << std::get<2>(i) << ")" << std::endl;
     }
     // std::cout << m_items.size() << std::endl;
 }
 
-}  // namespace sylar
+}  // namespace macro

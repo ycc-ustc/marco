@@ -1,13 +1,17 @@
 #include <iostream>
-#include "../sylar/log.h"
+#include <thread>
+#include "../macro/log.h"
+#include "../macro/util.h"
 
 int main() {
-    sylar::Logger::ptr logger(new sylar::Logger);
+    macro::Logger::ptr logger(new macro::Logger);
     logger->addAppender(
-        sylar::LogAppender::ptr(new sylar::StdoutLogAppender));
-    sylar::LogEvent::ptr event(
-        new sylar::LogEvent(__FILE__, __LINE__, 0, 1, 2, time(0)));
-    logger->log(sylar::LogLevel::DEBUG, event);
-    std::cout << "hello sylar log" << std::endl;
+        macro::LogAppender::ptr(new macro::StdoutLogAppender));
+    // macro::LogEvent::ptr event(
+    // new macro::LogEvent(__FILE__, __LINE__, 0, macro::GetThreadId(),
+    // macro::GetFiberId(), time(nullptr)));
+    // logger->log(macro::LogLevel::DEBUG, event);
+    std::cout << "hello macro log" << std::endl;
+    MACRO_LOG_INFO(logger) << "test macro log";
     return 0;
 }
