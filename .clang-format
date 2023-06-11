@@ -1,5 +1,5 @@
 ---
-# BasedOnStyle:  WebKit
+BasedOnStyle:  Google
 AccessModifierOffset: -4
 AlignConsecutiveAssignments: false
 AlignConsecutiveDeclarations: true
@@ -15,7 +15,7 @@ AllowShortLoopsOnASingleLine: false
 AlwaysBreakAfterDefinitionReturnType: None
 AlwaysBreakAfterReturnType: None
 AlwaysBreakBeforeMultilineStrings: false
-AlwaysBreakTemplateDeclarations: false
+AlwaysBreakTemplateDeclarations: true
 BinPackArguments: true
 BinPackParameters: true
 BraceWrapping:   
@@ -80,7 +80,7 @@ SpacesInCStyleCastParentheses: false
 SpacesInParentheses: false
 SpacesInSquareBrackets: false
 BreakBeforeBraces: Attach
-# Standard:        Latest
+Standard:        c++11
 TabWidth:        4
 UseTab:          Never
 ...

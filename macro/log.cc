@@ -1,4 +1,7 @@
 #include "log.h"
+
+#include <cstdarg>
+#include <cstdio>
 #include <ctime>
 #include <functional>
 #include <iostream>
@@ -28,13 +31,30 @@ const char* LogLevel::ToString(LogLevel::Level level) {
     return "UNKNOWN";
 }
 
-LogEventWrap::LogEventWrap(LogEvent::ptr event) : m_event(event) {}
-LogEventWrap::~LogEventWrap() {
+LogEventWrapper::LogEventWrapper(LogEvent::ptr event) : m_event(event) {}
+LogEventWrapper::~LogEventWrapper() {
     m_event->getLogger()->log(m_event->getLevel(), m_event);
 }
-std::stringstream& LogEventWrap::getSS() {
+
+std::stringstream& LogEventWrapper::getSS() {
     return m_event->getSS();
 }
+
+void LogEvent::format(const char* fmt, ...) {
+    va_list al;
+    va_start(al, fmt);
+    format(fmt, al);
+    va_end(al);
+}
+void LogEvent::format(const char* fmt, va_list al) {
+    char* buf = nullptr;
+    int   len = vasprintf(&buf, fmt, al);
+    if (len != -1) {
+        m_ss << std::string(buf, len);
+        free(buf);
+    }
+}
+
 Logger::Logger(const std::string& name)
     : m_name(name), m_level(LogLevel::DEBUG) {
     m_formatter.reset(new LogFormatter(
@@ -92,7 +112,10 @@ void Logger::fatal(LogEvent::ptr event) {
     log(LogLevel::FATAL, event);
 }
 
-FileLogAppender::FileLogAppender(const std::string& filename) {}
+FileLogAppender::FileLogAppender(const std::string& filename)
+    : m_filename(filename) {
+    reopen();
+}
 
 bool FileLogAppender::reopen() {
     if (m_filestream) {
@@ -388,5 +411,14 @@ void LogFormatter::init() {
     }
     // std::cout << m_items.size() << std::endl;
 }
+LogManager::LogManager() {
+    m_root.reset(new Logger);
+    m_root->addAppender(LogAppender::ptr(new StdoutLogAppender));
+}
+Logger::ptr LogManager::getLogger(const std::string& name) {
+    auto it = m_loggers.find(name);
+    return it == m_loggers.end() ? m_root : it->second;
+}
+void LogManager::init() {}
 
 }  // namespace macro

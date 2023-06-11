@@ -1,17 +1,21 @@
 #ifndef __MACRO_LOG_H__
 #define __MACRO_LOG_H__
 
+#include <cstdarg>
 #include <cstdint>
 #include <fstream>
 #include <list>
+#include <map>
 #include <memory>
 #include <sstream>
 #include <string>
 #include <vector>
 
+#include "singleton.h"
+
 #define MACRO_LOG_LEVEL(logger, level)                                     \
     if (logger->getLevel() <= level)                                       \
-    macro::LogEventWrap(                                                   \
+    macro::LogEventWrapper(                                                \
         macro::LogEvent::ptr(new macro::LogEvent(                          \
             logger, level, __FILE__, __LINE__, 0, macro::GetThreadId(),    \
             macro::GetFiberId(), time(nullptr))))                          \
@@ -28,6 +32,25 @@
 #define MACRO_LOG_FATAL(logger)                                            \
     MACRO_LOG_LEVEL(logger, macro::LogLevel::FATAL)
 
+#define MACRO_LOG_FMT_LEVEL(logger, level, fmt, ...)                       \
+    if (logger->getLevel() <= level)                                       \
+    macro::LogEventWrapper(                                                \
+        macro::LogEvent::ptr(new macro::LogEvent(                          \
+            logger, level, __FILE__, __LINE__, 0, macro::GetThreadId(),    \
+            macro::GetFiberId(), time(nullptr))))                          \
+        .getEvent()                                                        \
+        ->format(fmt, __VA_ARGS__)
+
+#define MACRO_LOG_FMT_DEBUG(logger, fmt, ...)                              \
+    MACRO_LOG_FMT_LEVEL(logger, macro::LogLevel::DEBUG, fmt, __VA_ARGS__)
+#define MACRO_LOG_FMT_INFO(logger, fmt, ...)                               \
+    MACRO_LOG_FMT_LEVEL(logger, macro::LogLevel::INFO, fmt, __VA_ARGS__)
+#define MACRO_LOG_FMT_WARN(logger, fmt, ...)                               \
+    MACRO_LOG_FMT_LEVEL(logger, macro::LogLevel::WARN, fmt, __VA_ARGS__)
+#define MACRO_LOG_FMT_ERROR(logger, fmt, ...)                              \
+    MACRO_LOG_FMT_LEVEL(logger, macro::LogLevel::ERROR, fmt, __VA_ARGS__)
+#define MACRO_LOG_FMT_FATAL(logger, fmt, ...)                              \
+    MACRO_LOG_FMT_LEVEL(logger, macro::LogLevel::FATAL, fmt, __VA_ARGS__)
 namespace macro {
 class Logger;
 
@@ -82,6 +105,8 @@ public:
     LogLevel::Level getLevel() {
         return m_level;
     }
+    void format(const char* fmt, ...);
+    void format(const char* fmt, va_list al);
 
 private:
     const char* m_file = nullptr;  // 文件名
@@ -96,11 +121,14 @@ private:
     LogLevel::Level         m_level;
 };
 
-class LogEventWrap {
+class LogEventWrapper {
 public:
-    LogEventWrap(LogEvent::ptr event);
-    ~LogEventWrap();
+    LogEventWrapper(LogEvent::ptr event);
+    ~LogEventWrapper();
     std::stringstream& getSS();
+    LogEvent::ptr      getEvent() {
+        return m_event;
+    }
 
 private:
     LogEvent::ptr m_event;
@@ -145,6 +173,13 @@ public:
     }
     LogFormatter::ptr getFormatter() const {
         return m_formatter;
+    }
+
+    void setLevel(LogLevel::Level level) {
+        m_level = level;
+    }
+    LogLevel::Level getLevel() {
+        return m_level;
     }
 
 protected:
@@ -208,6 +243,17 @@ private:
     std::list<LogAppender::ptr> m_appenders;  // appender集合
     LogFormatter::ptr           m_formatter;
 };
+class LogManager {
+public:
+    LogManager();
+    Logger::ptr getLogger(const std::string& name);
+    void        init();
 
+private:
+    std::map<std::string, Logger::ptr> m_loggers;
+    Logger::ptr                        m_root;
+};
+
+typedef macro::Singleton<LogManager> LoggerMgr;
 }  // namespace macro
 #endif
