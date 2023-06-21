@@ -10,7 +10,7 @@
 #include <sstream>
 #include <string>
 
-namespace macro {
+namespace marco {
 
 const char* LogLevel::ToString(LogLevel::Level level) {
     switch (level) {
@@ -421,4 +421,4 @@ Logger::ptr LogManager::getLogger(const std::string& name) {
 }
 void LogManager::init() {}
 
-}  // namespace macro
+}  // namespace marco

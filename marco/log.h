@@ -1,5 +1,5 @@
-#ifndef __MACRO_LOG_H__
-#define __MACRO_LOG_H__
+#ifndef __MARCO_LOG_H__
+#define __MARCO_LOG_H__
 
 #include <cstdarg>
 #include <cstdint>
@@ -12,46 +12,50 @@
 #include <vector>
 
 #include "singleton.h"
+#include "util.h"
 
-#define MACRO_LOG_LEVEL(logger, level)                                     \
+#define MARCO_LOG_LEVEL(logger, level)                                     \
     if (logger->getLevel() <= level)                                       \
-    macro::LogEventWrapper(                                                \
-        macro::LogEvent::ptr(new macro::LogEvent(                          \
-            logger, level, __FILE__, __LINE__, 0, macro::GetThreadId(),    \
-            macro::GetFiberId(), time(nullptr))))                          \
+    marco::LogEventWrapper(                                                \
+        marco::LogEvent::ptr(new marco::LogEvent(                          \
+            logger, level, __FILE__, __LINE__, 0, marco::GetThreadId(),    \
+            marco::GetFiberId(), time(nullptr))))                          \
         .getSS()
 
-#define MACRO_LOG_DEBUG(logger)                                            \
-    MACRO_LOG_LEVEL(logger, macro::LogLevel::DEBUG)
-#define MACRO_LOG_INFO(logger)                                             \
-    MACRO_LOG_LEVEL(logger, macro::LogLevel::INFO)
-#define MACRO_LOG_WARN(logger)                                             \
-    MACRO_LOG_LEVEL(logger, macro::LogLevel::WARN)
-#define MACRO_LOG_ERROR(logger)                                            \
-    MACRO_LOG_LEVEL(logger, macro::LogLevel::ERROR)
-#define MACRO_LOG_FATAL(logger)                                            \
-    MACRO_LOG_LEVEL(logger, macro::LogLevel::FATAL)
+#define MARCO_LOG_DEBUG(logger)                                            \
+    MARCO_LOG_LEVEL(logger, marco::LogLevel::DEBUG)
+#define MARCO_LOG_INFO(logger)                                             \
+    MARCO_LOG_LEVEL(logger, marco::LogLevel::INFO)
+#define MARCO_LOG_WARN(logger)                                             \
+    MARCO_LOG_LEVEL(logger, marco::LogLevel::WARN)
+#define MARCO_LOG_ERROR(logger)                                            \
+    MARCO_LOG_LEVEL(logger, marco::LogLevel::ERROR)
+#define MARCO_LOG_FATAL(logger)                                            \
+    MARCO_LOG_LEVEL(logger, marco::LogLevel::FATAL)
 
-#define MACRO_LOG_FMT_LEVEL(logger, level, fmt, ...)                       \
+#define MARCO_LOG_FMT_LEVEL(logger, level, fmt, ...)                       \
     if (logger->getLevel() <= level)                                       \
-    macro::LogEventWrapper(                                                \
-        macro::LogEvent::ptr(new macro::LogEvent(                          \
-            logger, level, __FILE__, __LINE__, 0, macro::GetThreadId(),    \
-            macro::GetFiberId(), time(nullptr))))                          \
+    marco::LogEventWrapper(                                                \
+        marco::LogEvent::ptr(new marco::LogEvent(                          \
+            logger, level, __FILE__, __LINE__, 0, marco::GetThreadId(),    \
+            marco::GetFiberId(), time(nullptr))))                          \
         .getEvent()                                                        \
         ->format(fmt, __VA_ARGS__)
 
-#define MACRO_LOG_FMT_DEBUG(logger, fmt, ...)                              \
-    MACRO_LOG_FMT_LEVEL(logger, macro::LogLevel::DEBUG, fmt, __VA_ARGS__)
-#define MACRO_LOG_FMT_INFO(logger, fmt, ...)                               \
-    MACRO_LOG_FMT_LEVEL(logger, macro::LogLevel::INFO, fmt, __VA_ARGS__)
-#define MACRO_LOG_FMT_WARN(logger, fmt, ...)                               \
-    MACRO_LOG_FMT_LEVEL(logger, macro::LogLevel::WARN, fmt, __VA_ARGS__)
-#define MACRO_LOG_FMT_ERROR(logger, fmt, ...)                              \
-    MACRO_LOG_FMT_LEVEL(logger, macro::LogLevel::ERROR, fmt, __VA_ARGS__)
-#define MACRO_LOG_FMT_FATAL(logger, fmt, ...)                              \
-    MACRO_LOG_FMT_LEVEL(logger, macro::LogLevel::FATAL, fmt, __VA_ARGS__)
-namespace macro {
+#define MARCO_LOG_FMT_DEBUG(logger, fmt, ...)                              \
+    MARCO_LOG_FMT_LEVEL(logger, marco::LogLevel::DEBUG, fmt, __VA_ARGS__)
+#define MARCO_LOG_FMT_INFO(logger, fmt, ...)                               \
+    MARCO_LOG_FMT_LEVEL(logger, marco::LogLevel::INFO, fmt, __VA_ARGS__)
+#define MARCO_LOG_FMT_WARN(logger, fmt, ...)                               \
+    MARCO_LOG_FMT_LEVEL(logger, marco::LogLevel::WARN, fmt, __VA_ARGS__)
+#define MARCO_LOG_FMT_ERROR(logger, fmt, ...)                              \
+    MARCO_LOG_FMT_LEVEL(logger, marco::LogLevel::ERROR, fmt, __VA_ARGS__)
+#define MARCO_LOG_FMT_FATAL(logger, fmt, ...)                              \
+    MARCO_LOG_FMT_LEVEL(logger, marco::LogLevel::FATAL, fmt, __VA_ARGS__)
+
+#define MARCO_LOG_ROOT() marco::LoggerMgr::GetInstance()->getRoot()
+
+namespace marco {
 class Logger;
 
 // 日志级别
@@ -248,12 +252,15 @@ public:
     LogManager();
     Logger::ptr getLogger(const std::string& name);
     void        init();
+    Logger::ptr getRoot() {
+        return m_root;
+    }
 
 private:
     std::map<std::string, Logger::ptr> m_loggers;
     Logger::ptr                        m_root;
 };
 
-typedef macro::Singleton<LogManager> LoggerMgr;
-}  // namespace macro
+typedef marco::Singleton<LogManager> LoggerMgr;
+}  // namespace marco
 #endif

@@ -1,53 +1,53 @@
 {
-    "files.associations": {
-        "cmath": "cpp",
-        "*.tcc": "cpp",
-        "iosfwd": "cpp",
-        "array": "cpp",
-        "atomic": "cpp",
-        "cctype": "cpp",
-        "clocale": "cpp",
-        "cstdarg": "cpp",
-        "cstddef": "cpp",
-        "cstdint": "cpp",
-        "cstdio": "cpp",
-        "cstdlib": "cpp",
-        "cwchar": "cpp",
-        "cwctype": "cpp",
-        "deque": "cpp",
-        "list": "cpp",
-        "unordered_map": "cpp",
-        "vector": "cpp",
-        "exception": "cpp",
-        "algorithm": "cpp",
-        "functional": "cpp",
-        "iterator": "cpp",
-        "map": "cpp",
-        "memory": "cpp",
-        "memory_resource": "cpp",
-        "numeric": "cpp",
-        "optional": "cpp",
-        "random": "cpp",
-        "string": "cpp",
-        "string_view": "cpp",
-        "system_error": "cpp",
-        "tuple": "cpp",
-        "type_traits": "cpp",
-        "utility": "cpp",
-        "fstream": "cpp",
-        "initializer_list": "cpp",
-        "iostream": "cpp",
-        "istream": "cpp",
-        "limits": "cpp",
-        "new": "cpp",
-        "ostream": "cpp",
-        "sstream": "cpp",
-        "stdexcept": "cpp",
-        "streambuf": "cpp",
-        "typeinfo": "cpp",
-        "bit": "cpp"
-    },
-     // 开启粘贴保存自动格式化
+  "files.associations": {
+    "cmath": "cpp",
+    "*.tcc": "cpp",
+    "iosfwd": "cpp",
+    "array": "cpp",
+    "atomic": "cpp",
+    "cctype": "cpp",
+    "clocale": "cpp",
+    "cstdarg": "cpp",
+    "cstddef": "cpp",
+    "cstdint": "cpp",
+    "cstdio": "cpp",
+    "cstdlib": "cpp",
+    "cwchar": "cpp",
+    "cwctype": "cpp",
+    "deque": "cpp",
+    "list": "cpp",
+    "unordered_map": "cpp",
+    "vector": "cpp",
+    "exception": "cpp",
+    "algorithm": "cpp",
+    "functional": "cpp",
+    "iterator": "cpp",
+    "map": "cpp",
+    "memory": "cpp",
+    "memory_resource": "cpp",
+    "numeric": "cpp",
+    "optional": "cpp",
+    "random": "cpp",
+    "string": "cpp",
+    "string_view": "cpp",
+    "system_error": "cpp",
+    "tuple": "cpp",
+    "type_traits": "cpp",
+    "utility": "cpp",
+    "fstream": "cpp",
+    "initializer_list": "cpp",
+    "iostream": "cpp",
+    "istream": "cpp",
+    "limits": "cpp",
+    "new": "cpp",
+    "ostream": "cpp",
+    "sstream": "cpp",
+    "stdexcept": "cpp",
+    "streambuf": "cpp",
+    "typeinfo": "cpp",
+    "bit": "cpp"
+  },
+  // 开启粘贴保存自动格式化
   "editor.formatOnPaste": true,
   "editor.formatOnSave": true,
   "editor.formatOnType": true,
@@ -70,7 +70,7 @@
     // 跨文件重命名变量
     "--cross-file-rename",
     // 允许补充头文件
-    "--header-insertion=iwyu",
+    "--header-insertion=never",
     // 输入建议中，已包含头文件的项与还未包含头文件的项会以圆点加以区分
     "--header-insertion-decorators",
     // 在后台自动分析文件(基于 complie_commands，我们用CMake生成)
@@ -84,7 +84,7 @@
     // 默认格式化风格: 谷歌开源项目代码指南
     // "--fallback-style=file",
     // 同时开启的任务数量
-    "-j=2",
+    "-j=12",
     // pch优化的位置(memory 或 disk，选择memory会增加内存开销，但会提升性能) 推荐在板子上使用disk
     "--pch-storage=disk",
     // 启用这项时，补全函数时，将会给参数提供占位符，键入后按 Tab 可以切换到下一占位符，乃至函数末
@@ -93,5 +93,11 @@
     // compelie_commands.json 文件的目录位置(相对于工作区，由于 CMake 生成的该文件默认在 build 文件夹中，故设置为 build)
     "--compile-commands-dir=build"
   ],
-
+  "clangd.fallbackFlags": [
+    // 设置clangd代码检查的c++版本，目前默认是c++14
+    "-std=c++17",
+    // 增加项目自身头文件依赖路劲，因为使用vs2019编译不会生成compile_command.json文件，项目自己的头文件就不会找到
+    "-I${workspaceFolder}", // 项目根目录
+    "-I/apps/marco/include" // 第三方依赖的头文件目录
+  ]
 }

@@ -1,6 +1,6 @@
 #include "util.h"
 
-namespace macro {
+namespace marco {
 pid_t GetThreadId() {
     return syscall(SYS_gettid);
 }
@@ -8,4 +8,4 @@ pid_t GetThreadId() {
 u_int32_t GetFiberId() {
     return 0;
 }
-}  // namespace macro
+}  // namespace marco

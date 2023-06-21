@@ -1,8 +1,8 @@
-#ifndef __MACRO_SINGLETON_H__
-#define __MACRO_SINGLETON_H__
+#ifndef __MARCO_SINGLETON_H__
+#define __MARCO_SINGLETON_H__
 
 #include <memory>
-namespace macro {
+namespace marco {
 template <class T, class X = void, int N = 0>
 class Singleton {
 public:
@@ -20,6 +20,6 @@ public:
         return v;
     }
 };
-}  // namespace macro
+}  // namespace marco
 
 #endif

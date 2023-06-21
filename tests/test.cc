@@ -1,30 +1,30 @@
 #include <iostream>
 #include <thread>
-#include "../macro/log.h"
-#include "../macro/util.h"
+
+#include "marco/log.h"
+#include "marco/util.h"
 
 int main() {
-    macro::Logger::ptr logger(new macro::Logger);
+    marco::Logger::ptr logger(new marco::Logger);
     logger->addAppender(
-        macro::LogAppender::ptr(new macro::StdoutLogAppender));
-    macro::FileLogAppender::ptr file_appender(
-        new macro::FileLogAppender("./log.txt"));
-    macro::LogFormatter::ptr fmt(new macro::LogFormatter("%d%T%p%T%m%n"));
+        marco::LogAppender::ptr(new marco::StdoutLogAppender));
+    marco::FileLogAppender::ptr file_appender(
+        new marco::FileLogAppender("./log.txt"));
+    marco::LogFormatter::ptr fmt(new marco::LogFormatter("%d%T%p%T%m%n"));
     file_appender->setFormatter(fmt);
-    file_appender->setLevel(macro::LogLevel::ERROR);
+    file_appender->setLevel(marco::LogLevel::ERROR);
 
     logger->addAppender(file_appender);
-    // macro::LogEvent::ptr event(
-    // new macro::LogEvent(__FILE__, __LINE__, 0, macro::GetThreadId(),
-    // macro::GetFiberId(), time(nullptr)));
-    // logger->log(macro::LogLevel::DEBUG, event);
-    std::cout << "hello macro log" << std::endl;
-    MACRO_LOG_INFO(logger) << "test macro log";
-    MACRO_LOG_ERROR(logger) << "test macro error";
-    MACRO_LOG_FMT_ERROR(logger, "test macro log error %s", "test");
+    // marco::LogEvent::ptr event(
+    // new marco::LogEvent(__FILE__, __LINE__, 0, marco::GetThreadId(),
+    // marco::GetFiberId(), time(nullptr)));
+    // logger->log(marco::LogLevel::DEBUG, event);
+    std::cout << "hello marco log" << std::endl;
+    MARCO_LOG_INFO(logger) << "test marco log";
+    MARCO_LOG_ERROR(logger) << "test marco error";
+    MARCO_LOG_FMT_ERROR(logger, "test marco log error %s", "test");
 
-
-    auto l = macro::LoggerMgr::GetInstance()->getLogger("xx");
-    MACRO_LOG_INFO(l) << "test xxx";
+    auto l = marco::LoggerMgr::GetInstance()->getLogger("xx");
+    MARCO_LOG_INFO(l) << "test xxx";
     return 0;
 }
