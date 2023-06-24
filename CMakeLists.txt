@@ -1,9 +1,11 @@
 cmake_minimum_required(VERSION 2.8)
 project(marco)
 
-set(CMAKE_VERBOSE_MAKEFILE ON)
-set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -rdynamic -O3 -g -std=c++11 -Wall -Wno-deprecated -Werror -Wno-unused-function")
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+include (cmake/utils.cmake)
 
+set(CMAKE_VERBOSE_MAKEFILE ON)
+set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -rdynamic -O3 -fPIC -ggdb -std=c++11 -Wall -Wno-deprecated -Werror -Wno-unused-function -Wno-builtin-macro-redefined -Wno-deprecated-declarations")
 include_directories(.)
 include_directories(/apps/marco/include)
 
@@ -17,6 +19,7 @@ set(LIB_SRC
 )
 
 add_library(marco SHARED ${LIB_SRC})
+force_redefine_file_macro_for_sources(marco)
 
 add_executable(test tests/test.cc)
 add_dependencies(test marco)
@@ -24,6 +27,7 @@ target_link_libraries(test marco ${YAMLCPP})
 
 add_executable(test_config tests/test_config.cc)
 add_dependencies(test_config marco)
+force_redefine_file_macro_for_sources(test_config)
 target_link_libraries(test_config marco ${YAMLCPP})
 
 
