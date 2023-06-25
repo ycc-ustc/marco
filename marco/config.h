@@ -28,7 +28,7 @@ public:
     const std::string& getName() {
         return m_name;
     }
-    const std::string& getmDescription() {
+    const std::string& getDescription() {
         return m_description;
     }
 
@@ -236,19 +236,19 @@ template <class T, class FromStr = LexicalCast<std::string, T>,
           class ToStr = LexicalCast<T, std::string>>
 class ConfigVar : public ConfigVarBase {
 public:
-    typedef std::shared_ptr<ConfigVar> ptr;
-    typedef std::function<void(const T& old_value, const T& new_value)>
-        on_change_cb;  // 属性修改的回调函数
+    using RWMutexType = RWMutex;
+    using ptr = std::shared_ptr<ConfigVar<T, FromStr, ToStr>>;
+    using on_change_cb = std::function<void(const T&, const T&)>;  // 属性修改的回调函数
 
     ConfigVar(const std::string& name, const T& default_value, const std::string description = "")
         : ConfigVarBase(name, description), m_val(default_value) {}
     std::string toString() override {
         try {
+            RWMutexType::ReadLock lock(m_mutex);
             return ToStr()(m_val);
         } catch (std::exception& e) {
-            MARCO_LOG_ERROR(MARCO_LOG_ROOT())
-                << "ConfigVar::toString exception" << e.what()
-                << "convert: " << typeid(m_val).name() << " to string";
+            MARCO_LOG_ERROR(MARCO_LOG_ROOT()) << "ConfigVar::toString exception" << e.what()
+                                              << "convert: " << TypeToName<T>() << " to string";
         }
         return "";
     }
@@ -256,45 +256,56 @@ public:
         try {
             setValue(FromStr()(val));
         } catch (std::exception& e) {
-            MARCO_LOG_ERROR(MARCO_LOG_ROOT())
-                << "ConfigVar::toString exception" << e.what()
-                << "convert: " << typeid(m_val).name() << " to string";
+            MARCO_LOG_ERROR(MARCO_LOG_ROOT()) << "ConfigVar::toString exception" << e.what()
+                                              << "convert: " << TypeToName<T>() << " to string";
         }
         return false;
     }
 
-    const T getValue() const {
+    const T getValue() {
+        RWMutexType::ReadLock ll(m_mutex);
         return m_val;
     }
 
     void setValue(const T& val) {
-        if (m_val == val) {
-            return;
+        {
+            RWMutexType::ReadLock lock(m_mutex);
+            if (m_val == val) {
+                return;
+            }
+            for (auto& i : m_cbs) {
+                i.second(m_val, val);
+            }
         }
-        for (auto& i : m_cbs) {
-            i.second(m_val, val);
-        }
+        RWMutexType::WriteLock lock(m_mutex);
         m_val = val;
     }
 
     std::string getTypeName() const override {
-        return typeid(T).name();
+        return TypeToName<T>();
     }
 
-    void addListener(uint64_t key, on_change_cb cb) {
-        m_cbs[key] = cb;
+    uint64_t addListener(on_change_cb cb) {
+        static uint64_t        s_fun_id = 0;
+        RWMutexType::WriteLock lock(m_mutex);
+        ++s_fun_id;
+        m_cbs[s_fun_id] = cb;
+        return s_fun_id;
     }
 
     void delListener(uint64_t key) {
+        RWMutexType::WriteLock lock(m_mutex);
         m_cbs.erase(key);
     }
 
     on_change_cb getListener(uint64_t key) {
-        auto it = m_cbs.find(key);
+        RWMutexType::ReadLock lock(m_mutex);
+        auto                  it = m_cbs.find(key);
         return it == m_cbs.end() ? nullptr : it.second;
     }
 
     void clearListener() {
+        RWMutexType::WriteLock lock(m_mutex);
         m_cbs.clear();
     }
 
@@ -302,35 +313,34 @@ private:
     T m_val;
     // 变更回调函数组，uint64_t key,要求唯一,一般可以用hash
     std::map<uint64_t, on_change_cb> m_cbs;
+    RWMutexType                      m_mutex;
 };
 
 class Config {
 public:
-    typedef std::unordered_map<std::string, ConfigVarBase::ptr> ConfigVarMap;
+    using ConfigVarMap = std::unordered_map<std::string, ConfigVarBase::ptr>;
+    using RWMutexType = RWMutex;
 
     template <class T>
     static typename ConfigVar<T>::ptr Lookup(const std::string& name, const T& default_value,
                                              const std::string& description = "") {
-        auto it = GetDatas().find(name);
+        RWMutexType::WriteLock lock(GetMutex());
+        auto                   it = GetDatas().find(name);
         if (it != GetDatas().end()) {
             auto tmp = std::dynamic_pointer_cast<ConfigVar<T>>(it->second);
             if (tmp) {
                 MARCO_LOG_INFO(MARCO_LOG_ROOT()) << "Lookup name=" << name << " exists";
+                return tmp;
             } else {
                 MARCO_LOG_ERROR(MARCO_LOG_ROOT())
-                    << "Lookup name=" << name << " exists but type not " << typeid(T).name()
+                    << "Lookup name=" << name << " exists but type not " << TypeToName<T>()
                     << " real type=" << it->second->getTypeName() << " " << it->second->toString();
                 return nullptr;
             }
         }
-        auto tmp = Lookup<T>(name);
-        if (tmp) {
-            MARCO_LOG_INFO(MARCO_LOG_ROOT()) << "Lookup done" << name << " exists";
-            return tmp;
-        }
 
-        if (name.find_first_not_of("abcdefghijklmnopqrstuvwxyz._012345678") != std::string::npos) {
-            MARCO_LOG_ERROR(MARCO_LOG_ROOT()) << "Lookup name invalid" << name;
+        if (name.find_first_not_of("abcdefghikjlmnopqrstuvwxyz._012345678") != std::string::npos) {
+            MARCO_LOG_INFO(MARCO_LOG_ROOT()) << "Lookup name invalid " << name;
             throw std::invalid_argument(name);
         }
 
@@ -341,7 +351,8 @@ public:
 
     template <class T>
     static typename ConfigVar<T>::ptr Lookup(const std::string& name) {
-        auto it = Config::GetDatas().find(name);
+        RWMutexType::ReadLock lock(GetMutex());
+        auto                  it = Config::GetDatas().find(name);
         if (it == Config::GetDatas().end()) {
             return nullptr;
         }
@@ -349,11 +360,17 @@ public:
     }
     static void               LoadFromYaml(const YAML::Node& root);
     static ConfigVarBase::ptr LookupBase(const std::string& name);
+    static void               Visit(std::function<void(ConfigVarBase::ptr)> cb);
 
 private:
     static ConfigVarMap& GetDatas() {
         static ConfigVarMap s_datas;
         return s_datas;
+    }
+
+    static RWMutexType& GetMutex() {
+        static RWMutexType s_mutex;
+        return s_mutex;
     }
 };
 }  // namespace marco

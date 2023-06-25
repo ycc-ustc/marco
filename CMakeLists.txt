@@ -10,12 +10,25 @@ include_directories(.)
 include_directories(/apps/marco/include)
 
 link_directories(/apps/marco/lib)
-find_library(YAMLCPP yaml-cpp)
+#find_library(YAMLCPP yaml-cpp)
+find_library(PTHREAD pthread)
+#set(LIBS ${LIBS} sylar)
+#set(LIBS ${LIBS} dl)
+#set(LIBS ${LIBS} ${YAMLCPP})
+#set(LIBS ${LIBS} ${PTHREAD})
 
 set(LIB_SRC
     marco/log.cc
     marco/util.cc
     marco/config.cc
+    marco/thread.cc
+)
+
+set(LIBS
+    marco
+    dl
+    pthread
+    yaml-cpp
 )
 
 add_library(marco SHARED ${LIB_SRC})
@@ -23,12 +36,22 @@ force_redefine_file_macro_for_sources(marco)
 
 add_executable(test tests/test.cc)
 add_dependencies(test marco)
-target_link_libraries(test marco ${YAMLCPP})
+target_link_libraries(test ${LIBS})
 
 add_executable(test_config tests/test_config.cc)
 add_dependencies(test_config marco)
 force_redefine_file_macro_for_sources(test_config)
-target_link_libraries(test_config marco ${YAMLCPP})
+target_link_libraries(test_config ${LIBS})
+
+# add_executable(test_thread tests/test_thread.cc)
+# add_dependencies(test_thread marco)
+# force_redefine_file_macro_for_sources(test_thread)
+# target_link_libraries(test_thread ${LIBS})
+
+add_executable(test_util tests/test_util.cc)
+add_dependencies(test_util marco)
+force_redefine_file_macro_for_sources(test_util)
+target_link_libraries(test_util ${LIBS})
 
 
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)

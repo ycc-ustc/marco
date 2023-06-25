@@ -11,6 +11,7 @@
 #include <string>
 #include <vector>
 
+#include "mutex.h"
 #include "singleton.h"
 #include "util.h"
 
@@ -168,7 +169,9 @@ class LogAppender {
     friend class Logger;
 
 public:
-    typedef std::shared_ptr<LogAppender> ptr;
+    using ptr = std::shared_ptr<LogAppender>;
+    using MutexType = Mutex;
+
     virtual ~LogAppender() {}
     virtual void log(std::shared_ptr<Logger> logger, LogLevel::Level level,
                      LogEvent::ptr event) = 0;
@@ -176,9 +179,7 @@ public:
     virtual std::string toYamlString() = 0;
 
     void              setFormatter(LogFormatter::ptr val);
-    LogFormatter::ptr getFormatter() const {
-        return m_formatter;
-    }
+    LogFormatter::ptr getFormatter();
 
     void setLevel(LogLevel::Level level) {
         m_level = level;
@@ -191,6 +192,7 @@ protected:
     LogLevel::Level   m_level = LogLevel::DEBUG;
     LogFormatter::ptr m_formatter;
     bool              m_hasFormatter = false;
+    MutexType         m_mutex;
 };
 
 // 输出到控制台的Appender
@@ -214,6 +216,7 @@ public:
 private:
     std::string   m_filename;
     std::ofstream m_filestream;
+    uint64_t m_lastTime;
 };
 
 // 日志器
@@ -221,7 +224,8 @@ class Logger : public std::enable_shared_from_this<Logger> {
     friend class LoggerManager;
 
 public:
-    typedef std::shared_ptr<Logger> ptr;
+    using ptr = std::shared_ptr<Logger>;
+    using MutexType = Mutex;
     Logger(const std::string& name = "root");
 
     void log(LogLevel::Level level, LogEvent::ptr event);
@@ -252,15 +256,17 @@ public:
 
     std::string toYamlString();
 
-    // private:
+private:
     std::string                 m_name;       // 日志名称
     LogLevel::Level             m_level;      // 日志级别
     std::list<LogAppender::ptr> m_appenders;  // appender集合
     LogFormatter::ptr           m_formatter;
     Logger::ptr                 m_root;
+    MutexType                   m_mutex;
 };
 class LoggerManager {
 public:
+    using MutexType = Mutex;
     LoggerManager();
     Logger::ptr getLogger(const std::string& name);
 
@@ -275,8 +281,9 @@ public:
 private:
     std::map<std::string, Logger::ptr> m_loggers;
     Logger::ptr                        m_root;
+    Mutex                              m_mutex;
 };
 
-typedef marco::Singleton<LoggerManager> LoggerMgr;
+using LoggerMgr = marco::Singleton<LoggerManager>;
 }  // namespace marco
 #endif
