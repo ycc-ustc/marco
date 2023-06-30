@@ -18,12 +18,12 @@ public:
         return m_name;
     }
 
+    static void SetName(const std::string& name);
+    
     void join();
 
     static Thread*            GetThis();
     static const std::string& GetName();
-    void                      setName(const std::string& name);
-
 private:
     Thread(const Thread&) = delete;
     Thread(const Thread&&) = delete;

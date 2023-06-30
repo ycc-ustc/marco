@@ -8,5 +8,8 @@
 #include "marco/thread.h"
 #include "marco/util.h"
 #include "marco/macro.h"
+#include "marco/fiber.h"
+#include "marco/thread.h"
+#include "marco/scheduler.h"
 
 #endif

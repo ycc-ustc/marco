@@ -3,6 +3,7 @@
 #include <execinfo.h>
 
 #include "log.h"
+#include "fiber.h"
 
 namespace marco {
 
@@ -13,7 +14,7 @@ pid_t GetThreadId() {
 }
 
 uint32_t GetFiberId() {
-    return 0;
+    return Fiber::GetFiberId();
 }
 
 static std::string demangle(const char* str) {

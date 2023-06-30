@@ -7,7 +7,11 @@
 #include <memory>
 
 namespace marco {
+
+class Scheduler;
 class Fiber : public std::enable_shared_from_this<Fiber> {
+    friend class Scheduler;
+
 public:
     using ptr = std::shared_ptr<Fiber>;
 
@@ -28,6 +32,7 @@ public:
 
 private:
     Fiber();
+
 public:
     Fiber(std::function<void()> cb, size_t stacksize = 0, bool use_caller = false);
 
@@ -38,15 +43,25 @@ public:
 
     void call();
 
+    void back();
+
     // 将当前协程切换到运行状态
     void swapIn();
 
     // 将当前协程切换到后台
     void swapOut();
 
+    uint64_t getId() const {
+        return m_id;
+    }
+
+    State getState() const {
+        return m_state;
+    }
+
 public:
     // 设置当前协程
-    static void setThis(Fiber* f);
+    static void       SetThis(Fiber* f);
     static Fiber::ptr GetThis();
     // 将当前协程切换到后台,并设置为READY状态
     static void YieldToReady();
@@ -55,6 +70,9 @@ public:
     // 返回当前协程的总数量
     static uint64_t TotalFibers();
     static void     MainFunction();
+    static void     CallerMainFunction();
+    static uint64_t GetFiberId();
+
 private:
     /// 协程id
     uint64_t m_id = 0;

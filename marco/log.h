@@ -14,12 +14,13 @@
 #include "mutex.h"
 #include "singleton.h"
 #include "util.h"
+#include "thread.h"
 
 #define MARCO_LOG_LEVEL(logger, level)                                                             \
     if (logger->getLevel() <= level)                                                               \
     marco::LogEventWrapper(marco::LogEvent::ptr(new marco::LogEvent(                               \
                                logger, level, __FILE__, __LINE__, 0, marco::GetThreadId(),         \
-                               marco::GetFiberId(), time(nullptr))))                               \
+                               marco::GetFiberId(), time(nullptr), marco::Thread::GetName())))     \
         .getSS()
 
 #define MARCO_LOG_DEBUG(logger) MARCO_LOG_LEVEL(logger, marco::LogLevel::DEBUG)
@@ -32,7 +33,7 @@
     if (logger->getLevel() <= level)                                                               \
     marco::LogEventWrapper(marco::LogEvent::ptr(new marco::LogEvent(                               \
                                logger, level, __FILE__, __LINE__, 0, marco::GetThreadId(),         \
-                               marco::GetFiberId(), time(nullptr))))                               \
+                               marco::GetFiberId(), time(nullptr), marco::Thread::GetName())))     \
         .getEvent()                                                                                \
         ->format(fmt, __VA_ARGS__)
 
@@ -69,7 +70,8 @@ class LogEvent {
 public:
     typedef std::shared_ptr<LogEvent> ptr;
     LogEvent(std::shared_ptr<Logger> logger, LogLevel::Level level, const char* file, int32_t line,
-             uint32_t elapse, uint32_t thread_id, uint32_t fiber_id, uint64_t time);
+             uint32_t elapse, uint32_t thread_id, uint32_t fiber_id, uint64_t time,
+             const std::string& thread_name);
 
     const char* getFile() const {
         return m_file;
@@ -216,7 +218,7 @@ public:
 private:
     std::string   m_filename;
     std::ofstream m_filestream;
-    uint64_t m_lastTime;
+    uint64_t      m_lastTime;
 };
 
 // 日志器
