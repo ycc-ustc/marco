@@ -87,6 +87,10 @@ void Fiber::reset(std::function<void()> cb) {
     MARCO_ASSERT(m_state == TERM || m_state == EXCEPT || m_state == INIT);
 
     m_cb = cb;
+    if (getcontext(&m_ctx)) {
+        MARCO_ASSERT2(false, "getcontext");
+    }
+
     m_ctx.uc_link = nullptr;
     m_ctx.uc_stack.ss_sp = m_stack;
     m_ctx.uc_stack.ss_size = m_stacksize;

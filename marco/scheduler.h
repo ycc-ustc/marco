@@ -61,6 +61,10 @@ protected:
     void         setThis();
     virtual void idle();
 
+    bool hasIdleThreads() {
+        return m_idleThreadCount > 0;
+    }
+
 private:
     template <class FiberOrCb>
     bool scheduleNoLock(FiberOrCb fc, int thread) {
@@ -84,9 +88,7 @@ private:
             fiber.swap(*f);
         }
 
-        FiberAndThread(std::function<void()> f, int thr) : cb(f), thread(thr) {
-            cb.swap(f);
-        }
+        FiberAndThread(std::function<void()> f, int thr) : cb(f), thread(thr) {}
 
         FiberAndThread(std::function<void()>* f, int thr) : thread(thr) {
             cb.swap(*f);

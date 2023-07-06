@@ -1,5 +1,6 @@
 #include "scheduler.h"
 
+#include "hook.h"
 #include "log.h"
 #include "macro.h"
 
@@ -19,7 +20,7 @@ Scheduler::Scheduler(size_t threads, bool use_caller, const std::string& name) :
         --threads;
         MARCO_ASSERT(GetThis() == nullptr);
         t_scheduler = this;
-        m_rootFiber.reset(new Fiber(std::bind(&Scheduler::run, this)));
+        m_rootFiber.reset(new Fiber(std::bind(&Scheduler::run, this), 0, true));
         marco::Thread::SetName(name);
 
         t_scheduler_fiber = m_rootFiber.get();
@@ -105,6 +106,7 @@ void Scheduler::setThis() {
 
 void Scheduler::run() {
     MARCO_LOG_DEBUG(g_logger) << m_name << " run";
+    set_hook_enable(true);
     setThis();
     if (marco::GetThreadId() != m_rootThread) {
         t_scheduler_fiber = Fiber::GetThis().get();
