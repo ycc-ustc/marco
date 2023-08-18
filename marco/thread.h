@@ -2,10 +2,11 @@
 #define __MARCO_THREAD_H__
 
 #include "mutex.h"
+#include "noncopyable.h"
 
 namespace marco {
 
-class Thread {
+class Thread : Noncopyable {
 public:
     typedef std::shared_ptr<Thread> ptr;
     Thread(std::function<void()> cb, const std::string& name);
@@ -19,11 +20,12 @@ public:
     }
 
     static void SetName(const std::string& name);
-    
+
     void join();
 
     static Thread*            GetThis();
     static const std::string& GetName();
+
 private:
     Thread(const Thread&) = delete;
     Thread(const Thread&&) = delete;

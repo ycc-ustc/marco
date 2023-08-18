@@ -3,10 +3,12 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <yaml-cpp/yaml.h>
 
 #include "marco/hook.h"
 #include "marco/iomanager.h"
 #include "marco/log.h"
+#include "marco/marco.h"
 
 marco::Logger::ptr g_logger = MARCO_LOG_ROOT();
 
@@ -31,7 +33,7 @@ void test_sock() {
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
     addr.sin_port = htons(80);
-    inet_pton(AF_INET, "115.239.210.27", &addr.sin_addr.s_addr);
+    inet_pton(AF_INET, "112.80.248.75", &addr.sin_addr.s_addr);
 
     MARCO_LOG_INFO(g_logger) << "begin connect";
     int rt = connect(sock, (const sockaddr*)&addr, sizeof(addr));
@@ -64,8 +66,10 @@ void test_sock() {
 }
 
 int main(int argc, char** argv) {
-    test_sleep();
-    // marco::IOManager iom;
-    // iom.schedule(test_sock);
+    // test_sleep();
+    YAML::Node root = YAML::LoadFile("/home/dev/marco/bin/config/log.yaml");
+    marco::Config::LoadFromYaml(root);
+    marco::IOManager iom;
+    iom.schedule(test_sock);
     return 0;
 }

@@ -16,6 +16,12 @@ find_library(PTHREAD pthread)
 #set(LIBS ${LIBS} dl)
 #set(LIBS ${LIBS} ${YAMLCPP})
 #set(LIBS ${LIBS} ${PTHREAD})
+option(BUILD_TEST "ON for complile test" OFF)
+
+find_package(OpenSSL REQUIRED)
+if(OPENSSL_FOUND)
+    include_directories(${OPENSSL_INCLUDE_DIR})
+endif()
 
 set(LIB_SRC
     marco/log.cc
@@ -28,7 +34,23 @@ set(LIB_SRC
     marco/timer.cc
     marco/hook.cc
     marco/fd_manager.cc
+    marco/address.cc
+    marco/socket.cc
+    marco/bytearray.cc
+    marco/http/http.cc
+    marco/http/http_parser.cc
+    marco/tcp_server.cc
+    marco/stream.cc
+    marco/socket_stream.cc
+    marco/http/http_session.cc
+    marco/http/servlet.cc
+    marco/http/http_server.cc
+    marco/http/http_connection.cc
 )
+
+ragelmaker(marco/http/http11_parser.rl LIB_SRC ${CMAKE_CURRENT_SOURCE_DIR}/marco/http)
+ragelmaker(marco/http/httpclient_parser.rl LIB_SRC ${CMAKE_CURRENT_SOURCE_DIR}/marco/http)
+ragelmaker(marco/uri.rl LIB_SRC ${CMAKE_CURRENT_SOURCE_DIR}/marco)
 
 set(LIBS
     marco
@@ -79,6 +101,56 @@ add_executable(test_hook tests/test_hook.cc)
 add_dependencies(test_hook marco)
 force_redefine_file_macro_for_sources(test_hook)
 target_link_libraries(test_hook ${LIBS})
+
+add_executable(test_address tests/test_address.cc)
+add_dependencies(test_address marco)
+force_redefine_file_macro_for_sources(test_address)
+target_link_libraries(test_address ${LIBS})
+
+add_executable(test_bytearray tests/test_bytearray.cc)
+add_dependencies(test_bytearray marco)
+force_redefine_file_macro_for_sources(test_bytearray)
+target_link_libraries(test_bytearray ${LIBS})
+
+add_executable(test_socket tests/test_socket.cc)
+add_dependencies(test_socket marco)
+force_redefine_file_macro_for_sources(test_socket)
+target_link_libraries(test_socket ${LIBS})
+
+add_executable(test_http tests/test_http.cc)
+add_dependencies(test_http marco)
+force_redefine_file_macro_for_sources(test_http)
+target_link_libraries(test_http ${LIBS})
+
+add_executable(test_http_parser tests/test_http_parser.cc)
+add_dependencies(test_http_parser marco)
+force_redefine_file_macro_for_sources(test_http_parser)
+target_link_libraries(test_http_parser ${LIBS})
+
+add_executable(test_tcp_server tests/test_tcp_server.cc)
+add_dependencies(test_tcp_server marco)
+force_redefine_file_macro_for_sources(test_tcp_server)
+target_link_libraries(test_tcp_server ${LIBS})
+
+add_executable(echo_server examples/echo_server.cc)
+add_dependencies(echo_server marco)
+force_redefine_file_macro_for_sources(echo_server)
+target_link_libraries(echo_server ${LIBS})
+
+add_executable(test_http_server tests/test_http_server.cc)
+add_dependencies(test_http_server marco)
+force_redefine_file_macro_for_sources(test_http_server)
+target_link_libraries(test_http_server ${LIBS})
+
+add_executable(test_http_connection tests/test_http_connection.cc)
+add_dependencies(test_http_connection marco)
+force_redefine_file_macro_for_sources(test_http_connection)
+target_link_libraries(test_http_connection ${LIBS})
+
+add_executable(test_uri tests/test_uri.cc)
+add_dependencies(test_uri marco)
+force_redefine_file_macro_for_sources(test_uri)
+target_link_libraries(test_uri ${LIBS})
 
 
 SET(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)

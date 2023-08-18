@@ -11,8 +11,10 @@
 #include <memory>
 #include <thread>
 
+#include "noncopyable.h"
+
 namespace marco {
-class Semaphore {
+class Semaphore : Noncopyable {
 public:
     Semaphore(uint32_t count = 0);
     ~Semaphore();
@@ -60,7 +62,7 @@ private:
     bool m_locked;
 };
 
-class Spinlock {
+class Spinlock : Noncopyable {
 public:
     using Lock = ScopedLockImpl<Spinlock>;
     Spinlock() {
@@ -82,7 +84,7 @@ private:
     pthread_spinlock_t m_mutex;
 };
 
-class CASLock {
+class CASLock : Noncopyable {
 public:
     using Lock = ScopedLockImpl<CASLock>;
     CASLock() {
@@ -165,7 +167,7 @@ private:
     bool m_locked;
 };
 
-class Mutex {
+class Mutex : Noncopyable {
 public:
     typedef ScopedLockImpl<Mutex> Lock;
     Mutex() {
@@ -187,7 +189,7 @@ public:
 private:
     pthread_mutex_t m_mutex;
 };
-class RWMutex {
+class RWMutex : Noncopyable {
 public:
     /// 局部读锁
     typedef ReadScopedLockImpl<RWMutex> ReadLock;
@@ -222,7 +224,7 @@ private:
 /**
  * @brief 空锁(用于调试)
  */
-class NullMutex {
+class NullMutex : Noncopyable {
 public:
     /// 局部锁
     typedef ScopedLockImpl<NullMutex> Lock;
@@ -251,7 +253,6 @@ public:
      * @brief 解锁
      */
     void unlock() {}
-
 };
 }  // namespace marco
 

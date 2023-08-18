@@ -1,4 +1,5 @@
 #include "marco/marco.h"
+#include "marco/hook.h"
 
 static marco::Logger::ptr g_logger = MARCO_LOG_ROOT();
 
@@ -8,7 +9,7 @@ void test_fiber() {
 
     sleep(1);
     if (--s_count >= 0) {
-    marco::Scheduler::GetThis()->schedule(&test_fiber);
+        marco::Scheduler::GetThis()->schedule(&test_fiber, marco::GetThreadId());
     }
 }
 

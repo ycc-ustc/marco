@@ -86,7 +86,7 @@ static ssize_t do_io(int fd, OriginFun fun, const char* hook_fun_name, uint32_t 
     if (!marco::t_hook_enable) {
         return fun(fd, std::forward<Args>(args)...);
     }
-
+    MARCO_LOG_DEBUG(g_logger) << "do_io ... " << hook_fun_name << " " << event ;
     marco::FdCtx::ptr ctx = marco::FdMgr::GetInstance()->get(fd);
     if (!ctx) {
         return fun(fd, std::forward<Args>(args)...);
@@ -234,6 +234,7 @@ int connect_with_timeout(int fd, const struct sockaddr* addr, socklen_t addrlen,
     }
 
     int n = connect_f(fd, addr, addrlen);
+    // perror("connect");
     if (n == 0) {
         return 0;
     } else if (n != -1 || errno != EINPROGRESS) {
@@ -246,6 +247,7 @@ int connect_with_timeout(int fd, const struct sockaddr* addr, socklen_t addrlen,
     std::weak_ptr<timer_info>   winfo(tinfo);
 
     if (timeout_ms != (uint64_t)-1) {
+        MARCO_LOG_DEBUG(g_logger) << "125";
         timer = iom->addConditionTimer(
             timeout_ms,
             [winfo, fd, iom]() {
