@@ -75,6 +75,8 @@ std::string HttpResult::toString() const {
                 // len -= 2;
 
                 MARCO_LOG_DEBUG(g_logger) << "content_len=" << client_parser.content_len;
+                // +2 的含义是为了跳过块数据的末尾的 CRLF（回车换行）分隔符。在 Transfer-Encoding:
+                // chunked 编码中，每个块的末尾都会有一个 CRLF，用于分隔不同的块。
                 if (client_parser.content_len + 2 <= len) {
                     body.append(data, client_parser.content_len);
                     memmove(data, data + client_parser.content_len + 2,

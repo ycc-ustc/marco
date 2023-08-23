@@ -27,14 +27,14 @@ void test_fiber() {
 int main(int argc, char** argv) {
     marco::Thread::SetName("main");
 
-    std::vector<marco::Thread::ptr> thrs;
-    for (int i = 0; i < 3; ++i) {
-        thrs.push_back(
-            marco::Thread::ptr(new marco::Thread(&test_fiber, "name_" + std::to_string(i))));
-    }
-    for (auto i : thrs) {
-        i->join();
-    }
-    // test_fiber();
+    // std::vector<marco::Thread::ptr> thrs;
+    // for (int i = 0; i < 3; ++i) {
+    //     thrs.push_back(
+    //         marco::Thread::ptr(new marco::Thread(&test_fiber, "name_" + std::to_string(i))));
+    // }
+    // for (auto i : thrs) {
+    //     i->join();
+    // }
+    test_fiber();
     return 0;
 }

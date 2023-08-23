@@ -109,6 +109,8 @@ retry:
     while (n == -1 && errno == EINTR) {
         n = fun(fd, std::forward<Args>(args)...);
     }
+
+    // 如果返回值仍然为 -1 且 errno 是 EAGAIN（表示操作将阻塞），则进入下述逻辑
     if (n == -1 && errno == EAGAIN) {
         marco::IOManager*         iom = marco::IOManager::GetThis();
         marco::Timer::ptr         timer;
@@ -465,15 +467,26 @@ int setsockopt(int sockfd, int level, int optname, const void* optval, socklen_t
     if (!marco::t_hook_enable) {
         return setsockopt_f(sockfd, level, optname, optval, optlen);
     }
+
+    // 如果 hook 不可用，直接调用原始的 setsockopt 函数
+    // 这里的 setsockopt_f 是原始的 setsockopt 函数的指针
+
     if (level == SOL_SOCKET) {
         if (optname == SO_RCVTIMEO || optname == SO_SNDTIMEO) {
+            // 如果设置的选项是接收超时或发送超时
             marco::FdCtx::ptr ctx = marco::FdMgr::GetInstance()->get(sockfd);
+            // 获取文件描述符对应的上下文信息
+
             if (ctx) {
                 const timeval* v = (const timeval*)optval;
+                // optval 指向 timeval 结构体，即设置超时的值
                 ctx->setTimeout(optname, v->tv_sec * 1000 + v->tv_usec / 1000);
+                // 将设置的超时值转换为毫秒并保存到文件描述符的上下文中
             }
         }
     }
+
+    // 调用原始的 setsockopt 函数
     return setsockopt_f(sockfd, level, optname, optval, optlen);
 }
 }

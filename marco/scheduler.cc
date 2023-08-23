@@ -118,7 +118,7 @@ void Scheduler::setThis() {
 
 // 调度器运行函数
 void Scheduler::run() {
-    set_hook_enable(false);
+    set_hook_enable(true);
     setThis();
 
     // 当前线程管理的Fiber
@@ -144,6 +144,7 @@ void Scheduler::run() {
             MutexType::Lock lock(m_mutex);
             auto            it = m_fibers.begin();
             while (it != m_fibers.end()) {
+                // threadId != -1是use_caller 限制执行进程
                 if (it->thread != -1 && it->thread != marco::GetThreadId()) {
                     ++it;
                     tickle_me = true;
@@ -215,6 +216,7 @@ void Scheduler::run() {
 
             // 执行空闲任务
             if (idle_fiber->getState() == Fiber::TERM) {
+                MARCO_LOG_INFO(g_logger) << "idle fiber term";
                 break;
             }
 

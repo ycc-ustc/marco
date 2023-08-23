@@ -9,14 +9,14 @@ void test_fiber() {
 
     sleep(1);
     if (--s_count >= 0) {
-        marco::Scheduler::GetThis()->schedule(&test_fiber, marco::GetThreadId());
+        marco::Scheduler::GetThis()->schedule(&test_fiber);
     }
 }
 
 int main(int argc, char** argv) {
     marco::Thread::SetName("main");
+    marco::Scheduler sc(3, true, "test");
     MARCO_LOG_INFO(g_logger) << "main";
-    marco::Scheduler sc(3, false, "test");
     // marco::Scheduler sc;
 
     sc.start();

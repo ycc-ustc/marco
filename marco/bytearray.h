@@ -86,6 +86,10 @@ public:
     size_t getPosition() const {
         return m_position;
     }
+
+    // 设置ByteArray当前位置
+    // 如果m_position > m_size 则 m_size = m_position 如果m_position > m_capacity 则抛出
+    // std::out_of_range
     void setPosition(size_t val);
 
     bool writeToFile(const std::string& name) const;
@@ -120,8 +124,11 @@ private:
 
 private:
     size_t m_baseSize;
+    /// 当前操作位置
     size_t m_position;
+    /// 当前的总容量
     size_t m_capacity;
+    /// 当前数据的大小
     size_t m_size;
     int8_t m_endian;
 

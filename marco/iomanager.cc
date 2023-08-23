@@ -115,7 +115,7 @@ IOManager::~IOManager() {
     }
 }
 
-// 1success 0 retry -1 error
+// 添加成功返回0,失败返回-1
 int IOManager::addEvent(int fd, Event event, std::function<void()> cb) {
     FdContext*            fd_ctx = nullptr;
     RWMutexType::ReadLock lock(m_mutex);
@@ -153,7 +153,6 @@ int IOManager::addEvent(int fd, Event event, std::function<void()> cb) {
     m_pendingEventCount++;
     fd_ctx->events = (Event)(fd_ctx->events | event);
 
-    fd_ctx->events = (Event)(fd_ctx->events | event);
     FdContext::EventContext& event_ctx = fd_ctx->getContext(event);
     MARCO_ASSERT(!event_ctx.scheduler && !event_ctx.fiber && !event_ctx.cb);
 
@@ -331,6 +330,7 @@ void IOManager::idle() {
         int rt = 0;
         do {
             static const int MAX_TIMEOUT = 3000;
+            // 根据 next_timeout 更新等待时间，并确保不超过最大等待时间
             if (next_timeout != ~0ull) {
                 next_timeout =
                     static_cast<int>(next_timeout) > MAX_TIMEOUT ? MAX_TIMEOUT : next_timeout;
@@ -354,6 +354,7 @@ void IOManager::idle() {
 
         for (int i = 0; i < rt; ++i) {
             epoll_event& event = events[i];
+            // 如果是触发通知的事件，读取数据并继续
             if (event.data.fd == m_tickleFds[0]) {
                 uint8_t dummy[256];
                 while (read(m_tickleFds[0], dummy, sizeof(dummy)) > 0) {
@@ -385,9 +386,9 @@ void IOManager::idle() {
             int rt2 = epoll_ctl(m_epfd, op, fd_ctx->fd, &event);
             if (rt2) {
                 MARCO_LOG_ERROR(g_logger)
-                    << "epoll_ctl(" << m_epfd << ", " << static_cast<EpollCtlOp>(op) << ", " << fd_ctx->fd
-                    << ", " << static_cast<EPOLL_EVENTS>(event.events) << "):" << rt2 << " (" << errno << ") ("
-                    << strerror(errno) << ")";
+                    << "epoll_ctl(" << m_epfd << ", " << static_cast<EpollCtlOp>(op) << ", "
+                    << fd_ctx->fd << ", " << static_cast<EPOLL_EVENTS>(event.events) << "):" << rt2
+                    << " (" << errno << ") (" << strerror(errno) << ")";
                 continue;
             }
 

@@ -611,6 +611,7 @@ uint64_t ByteArray::getReadBuffers(std::vector<iovec>& buffers, uint64_t len,
     return size;
 }
 
+// 获取可写入的缓存,保存成iovec数组 
 uint64_t ByteArray::getWriteBuffers(std::vector<iovec>& buffers, uint64_t len) {
     if (len == 0) {
         return 0;

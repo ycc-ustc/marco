@@ -40,6 +40,12 @@ public:
     // 1success 0 retry -1 error
     int  addEvent(int fd, Event event, std::function<void()> cb = nullptr);
     bool delEvent(int fd, Event event);
+    /**
+     * @brief 取消事件
+     * @param[in] fd socket句柄
+     * @param[in] event 事件类型
+     * @attention 如果事件存在则触发事件
+     */
     bool cancelEvent(int fd, Event event);
 
     bool              cancelAll(int fd);

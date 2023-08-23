@@ -8,7 +8,7 @@ namespace marco {
 
 class Thread : Noncopyable {
 public:
-    typedef std::shared_ptr<Thread> ptr;
+    using ptr = std::shared_ptr<Thread>;
     Thread(std::function<void()> cb, const std::string& name);
     ~Thread();
 
